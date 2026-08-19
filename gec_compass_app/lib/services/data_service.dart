@@ -119,8 +119,12 @@ class DataService {
       if (_cachedBaseBuildings == null) {
         final String jsonString =
             await rootBundle.loadString('assets/campus_buildings.json');
-        // Parse JSON on a background isolate to avoid main-thread jank
-        _cachedBaseBuildings = await compute(_parseBuildings, jsonString);
+        // On Web, synchronous parsing avoids Web Worker spin-up latency (~200ms) for small JSON
+        if (kIsWeb) {
+          _cachedBaseBuildings = _parseBuildings(jsonString);
+        } else {
+          _cachedBaseBuildings = await compute(_parseBuildings, jsonString);
+        }
       }
 
       final localCustom = await _loadCustomBuildingsLocal();

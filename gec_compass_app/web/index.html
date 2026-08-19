@@ -1631,44 +1631,51 @@
 
 <body>
   <style>
-    body {
-      background-color: #F8FAFC;
+    html, body {
+      background-color: #0F172A;
       margin: 0;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
-      color: #0F172A;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #F8FAFC;
     }
 
-    .loading-container {
+    #loading-splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #0F172A;
+      z-index: 999999;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 24px;
-      z-index: 10;
+      gap: 20px;
+      transition: opacity 0.25s ease-out;
+      pointer-events: auto;
     }
 
     .gradient-ring-outer {
-      width: 96px;
-      height: 96px;
+      width: 88px;
+      height: 88px;
       border-radius: 50%;
       background: conic-gradient(from 0deg, #2563EB, #06B6D4, #8B5CF6, #EC4899, #3B82F6, #2563EB);
-      padding: 4px;
-      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
-      animation: spin 2.5s linear infinite;
+      padding: 3.5px;
+      box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.4);
+      animation: spin 2.2s linear infinite;
       will-change: transform;
     }
 
     .inner-circle {
       width: 100%;
       height: 100%;
-      background: #FFFFFF;
+      background: #1E293B;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -1676,25 +1683,51 @@
     }
 
     .compass-icon {
-      width: 44px;
-      height: 44px;
-      animation: counter-spin 2.5s linear infinite;
+      width: 42px;
+      height: 42px;
+      animation: counter-spin 2.2s linear infinite;
       will-change: transform;
     }
 
-    .app-title {
+    .loading-title {
       font-size: 22px;
       font-weight: 700;
-      color: #0F172A;
-      letter-spacing: -0.5px;
-      margin: 0;
+      color: #FFFFFF;
+      letter-spacing: -0.3px;
+      margin-top: 4px;
     }
 
-    .app-subtitle {
-      font-size: 13.5px;
+    .loading-subtitle {
+      font-size: 13px;
       font-weight: 500;
-      color: #64748B;
-      margin-top: 4px;
+      color: #94A3B8;
+      margin-top: -12px;
+    }
+
+    .progress-bar-track {
+      width: 160px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+      margin-top: 6px;
+    }
+
+    .progress-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #2563EB, #06B6D4, #3B82F6);
+      border-radius: 99px;
+      position: absolute;
+      left: -100%;
+      animation: progress-slide 1.6s ease-in-out infinite;
+    }
+
+    @keyframes progress-slide {
+      0% { left: -100%; width: 40%; }
+      50% { left: 30%; width: 70%; }
+      100% { left: 100%; width: 40%; }
     }
 
     @keyframes spin {
@@ -1928,13 +1961,14 @@
     function dismissWebSplash() {
       var splash = document.getElementById('loading-splash');
       if (splash) {
-        splash.style.transition = 'opacity 0.15s ease-out';
+        splash.style.transition = 'opacity 0.25s ease-out';
         splash.style.opacity = '0';
+        splash.style.pointerEvents = 'none';
         setTimeout(function() {
           if (splash && splash.parentNode) {
             splash.parentNode.removeChild(splash);
           }
-        }, 160);
+        }, 260);
       }
       var seoContent = document.getElementById('seo-content');
       if (seoContent && seoContent.parentNode) {
@@ -1942,21 +1976,12 @@
       }
     }
 
-    // 1. Flutter standard frame events
+    // Dismiss splash screen when Flutter renders its very first frame
     window.addEventListener('flutter-first-frame', dismissWebSplash);
     window.addEventListener('flutter-app-loaded', dismissWebSplash);
 
-    // 2. DOM ready / loaded fallback
-    if (document.readyState === 'complete') {
-      setTimeout(dismissWebSplash, 1000);
-    } else {
-      window.addEventListener('load', function() {
-        setTimeout(dismissWebSplash, 1000);
-      });
-    }
-
-    // 3. Absolute safety timeout
-    setTimeout(dismissWebSplash, 2500);
+    // Generous fallback safety timeout only if Flutter fails to signal
+    setTimeout(dismissWebSplash, 7000);
   </script>
   <script src="flutter_bootstrap.js" async fetchpriority="high"></script>
 </body>
