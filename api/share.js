@@ -207,9 +207,10 @@ export default async function handler(request, response) {
     if (lat) queryParams.set('lat', lat);
     if (lng) queryParams.set('lng', lng);
     const redirectUrl = `${baseUrl}/?${queryParams.toString()}`;
+    const shareUrl = `${baseUrl}/api/share?${queryParams.toString()}`;
 
     const locationLabel = grid ? `Campus Grid Location (${grid})` : `Shared Location (${lat}, ${lng})`;
-    const desc = `Live campus location shared via GEC Compass. Click to view on map and get walking directions.`;
+    const desc = `Live campus location shared via GEC Compass at Government Engineering College Thrissur. Click to open interactive walking directions.`;
     const imageUrl = `${baseUrl}/icons/Icon-512.png`;
     const escHtml = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -217,11 +218,12 @@ export default async function handler(request, response) {
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escHtml(locationLabel)} | GEC Maps | GECT Compass</title>
   <meta name="description" content="${escHtml(desc)}">
-  <link rel="canonical" href="${escHtml(redirectUrl)}">
+  <link rel="canonical" href="${escHtml(shareUrl)}">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="${escHtml(redirectUrl)}">
+  <meta property="og:url" content="${escHtml(shareUrl)}">
   <meta property="og:title" content="${escHtml(locationLabel)} | GEC Maps | GECT Compass">
   <meta property="og:description" content="${escHtml(desc)}">
   <meta property="og:image" content="${escHtml(imageUrl)}">
@@ -229,11 +231,81 @@ export default async function handler(request, response) {
   <meta name="twitter:title" content="${escHtml(locationLabel)} | GEC Maps | GECT Compass">
   <meta name="twitter:description" content="${escHtml(desc)}">
   <meta name="twitter:image" content="${escHtml(imageUrl)}">
-  <meta http-equiv="refresh" content="0;url=${escHtml(redirectUrl)}">
-  <script>window.location.href = ${JSON.stringify(redirectUrl)};</script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      max-width: 480px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      backdrop-filter: blur(12px);
+    }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+      padding: 4px 10px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+    p.desc {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+  </style>
 </head>
 <body>
-  <p>Redirecting to <a href="${escHtml(redirectUrl)}">${escHtml(locationLabel)} on GEC Maps</a>...</p>
+  <div class="card">
+    <span class="tag">Shared Coordinate</span>
+    <h1>${escHtml(locationLabel)}</h1>
+    <p class="desc">${escHtml(desc)}</p>
+    <a class="btn" href="${escHtml(redirectUrl)}">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      Open in Campus Map &amp; Directions
+    </a>
+  </div>
 </body>
 </html>`;
 
@@ -391,11 +463,12 @@ export default async function handler(request, response) {
   </script>
 
   <meta charset="utf-8">
-  <title>${escHtml(place.name)} | GEC Maps | GECT Compass | GECT Maps & GEC Compass – GEC Thrissur</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escHtml(place.name)} | GEC Maps | GECT Compass – GEC Thrissur</title>
   <meta name="title" content="${escHtml(place.name)} | GEC Maps | GECT Compass | GECT Maps & GEC Compass">
   <meta name="description" content="${escHtml(desc)} - View location details and walking directions on GEC Maps & GECT Compass for Government Engineering College Thrissur.">
   <meta name="keywords" content="${escHtml(place.name)}, GEC Maps, GECT Compass, GECT Maps, GEC Compass, gecmaps, gectcompass, GEC Thrissur, GECT Thrissur Maps, GEC Navigator, Government Engineering College Thrissur">
-  <link rel="canonical" href="${escHtml(redirectUrl)}">
+  <link rel="canonical" href="${escHtml(shareUrl)}">
   
   <!-- Open Graph / Facebook / WhatsApp -->
   <meta property="og:type" content="website">
@@ -419,7 +492,7 @@ export default async function handler(request, response) {
     "@type": "Place",
     "name": ${JSON.stringify(place.name)},
     "description": ${JSON.stringify(desc)},
-    "url": ${JSON.stringify(redirectUrl)},
+    "url": ${JSON.stringify(shareUrl)},
     "hasMap": ${JSON.stringify(redirectUrl)},
     "image": ${JSON.stringify(imageUrl)},
     ${place.lat && place.lng ? `"geo": {
@@ -442,14 +515,125 @@ export default async function handler(request, response) {
   }
   </script>
 
-  <!-- Redirect to the main application with placeId parameter -->
-  <meta http-equiv="refresh" content="0;url=${escHtml(redirectUrl)}">
-  <script>
-    window.location.href = ${JSON.stringify(redirectUrl)};
-  </script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      max-width: 480px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      backdrop-filter: blur(12px);
+    }
+    .img-container {
+      width: 100%;
+      height: 220px;
+      background: #1e293b;
+      position: relative;
+    }
+    .img-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .content {
+      padding: 24px;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+      padding: 4px 10px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+    p.desc {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    }
+    .footer-links {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .footer-links a {
+      color: #94a3b8;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+    .footer-links a:hover {
+      color: #38bdf8;
+    }
+  </style>
 </head>
 <body>
-  <p>Redirecting to <a href="${escHtml(redirectUrl)}">${escHtml(place.name)} on GEC Maps & GECT Compass</a>...</p>
+  <div class="card">
+    ${resolvedPhotoUrl || place.photoBase64 ? `
+    <div class="img-container">
+      <img src="${escHtml(imageUrl)}" alt="${escHtml(place.name)}" loading="lazy">
+    </div>` : ''}
+    <div class="content">
+      <span class="tag">${escHtml(place.tags?.place_type || place.tags?.building || 'Campus Location')}</span>
+      <h1>${escHtml(place.name)}</h1>
+      <p class="desc">${escHtml(desc)}</p>
+      <a class="btn" href="${escHtml(redirectUrl)}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        Open in Campus Map &amp; Directions
+      </a>
+    </div>
+  </div>
+  <div class="footer-links">
+    <a href="${baseUrl}/">Home</a> •
+    <a href="${baseUrl}/about">About</a> •
+    <a href="${baseUrl}/sitemap.xml">Sitemap</a>
+  </div>
 </body>
 </html>`;
 

@@ -48,15 +48,17 @@ class GridAddressingService {
     return "GEC-E${eastingIndex.toString().padLeft(3, '0')}-N${northingIndex.toString().padLeft(3, '0')}";
   }
 
-  /// Generates a sub-meter precision campus grid address string (e.g., GEC-E074.4-N052.8)
-  static String getPrecisionGridAddress(LatLng point, {double resolutionMeters = 1.0}) {
+  /// Generates a high-precision campus grid address string (e.g., GEC-E074.452-N052.819)
+  /// Supporting customizable decimal places (default: 3 decimals = ~1 centimeter resolution).
+  static String getPrecisionGridAddress(LatLng point, {int decimals = 3}) {
     final double latDist = computeDistanceMeters(LatLng(swLat, point.longitude), point);
     final double lngDist = computeDistanceMeters(LatLng(point.latitude, swLng), point);
 
     final double eVal = lngDist / gridCellSizeMeters;
     final double nVal = latDist / gridCellSizeMeters;
 
-    return "GEC-E${eVal.toStringAsFixed(1).padLeft(5, '0')}-N${nVal.toStringAsFixed(1).padLeft(5, '0')}";
+    final int padWidth = 4 + decimals;
+    return "GEC-E${eVal.toStringAsFixed(decimals).padLeft(padWidth, '0')}-N${nVal.toStringAsFixed(decimals).padLeft(padWidth, '0')}";
   }
 
   /// Snaps a floating coordinate to the nearest geodesic grid quantization step

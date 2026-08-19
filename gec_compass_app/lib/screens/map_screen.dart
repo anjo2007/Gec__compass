@@ -1406,17 +1406,60 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin, Wi
   Future<void> _startNavigation() async {
     if (_selectedBuilding == null) return;
     
-    final startPos = _currentPosition ?? _campusCenter;
-    final endPos = LatLng(_selectedBuilding!.lat, _selectedBuilding!.lng);
-
     // Show a loading SnackBar
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Calculating route along campus paths...', style: TextStyle(fontWeight: FontWeight.w600)),
-        duration: Duration(seconds: 30),
+        content: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text('Fetching live location and calculating route...', style: TextStyle(fontWeight: FontWeight.w600)),
+            ),
+          ],
+        ),
+        duration: Duration(seconds: 15),
         backgroundColor: Color(0xFF3B82F6),
       ),
     );
+
+    // Fetch fresh user GPS location before computing and showing route
+    LatLng? startPos = _currentPosition;
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled().timeout(const Duration(seconds: 2), onTimeout: () => false);
+      if (serviceEnabled) {
+        LocationPermission perm = await Geolocator.checkPermission().timeout(const Duration(seconds: 2), onTimeout: () => LocationPermission.denied);
+        if (perm == LocationPermission.denied) {
+          perm = await Geolocator.requestPermission().timeout(const Duration(seconds: 4), onTimeout: () => LocationPermission.denied);
+        }
+        if (perm == LocationPermission.whileInUse || perm == LocationPermission.always) {
+          final pos = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+            timeLimit: const Duration(seconds: 4),
+          ).timeout(const Duration(seconds: 4), onTimeout: () async {
+            final lastKnown = await Geolocator.getLastKnownPosition();
+            if (lastKnown != null) return lastKnown;
+            throw TimeoutException("Location timeout");
+          });
+          final freshLatLng = LatLng(pos.latitude, pos.longitude);
+          startPos = freshLatLng;
+          _pdrService.updateGPSPosition(freshLatLng);
+          _positionNotifier.value = freshLatLng;
+          setState(() {
+            _currentPosition = freshLatLng;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("GPS location fetch note before routing: $e");
+    }
+
+    startPos ??= _currentPosition ?? _campusCenter;
+    final endPos = LatLng(_selectedBuilding!.lat, _selectedBuilding!.lng);
 
     try {
       // Get OSRM path asynchronously
@@ -1737,15 +1780,15 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin, Wi
                   Navigator.pop(context);
                   if (_currentPosition != null) {
                     final grid = GridAddressingService.getCampusGridAddress(_currentPosition!);
-                    final precisionGrid = GridAddressingService.getPrecisionGridAddress(_currentPosition!);
-                    final latStr = _currentPosition!.latitude.toStringAsFixed(6);
-                    final lngStr = _currentPosition!.longitude.toStringAsFixed(6);
+                    final precisionGrid = GridAddressingService.getPrecisionGridAddress(_currentPosition!, decimals: 3);
+                    final latStr = _currentPosition!.latitude.toStringAsFixed(7);
+                    final lngStr = _currentPosition!.longitude.toStringAsFixed(7);
                     final shareUrl = (kIsWeb && Uri.base.host.isNotEmpty && !Uri.base.host.contains('localhost') && !Uri.base.host.contains('127.0.0.1'))
                         ? Uri.base.replace(queryParameters: {'grid': precisionGrid, 'lat': latStr, 'lng': lngStr}).toString()
                         : 'https://gecmaps.vercel.app/?grid=$precisionGrid&lat=$latStr&lng=$lngStr';
                     final shareMsg = "📍 My Live Campus Location (GEC Compass):\n"
-                        "• Grid Code: $grid ($precisionGrid)\n"
-                        "• Coordinates: $latStr, $lngStr\n"
+                        "• High-Precision Grid: $precisionGrid\n"
+                        "• GPS Coordinates: $latStr, $lngStr\n"
                         "• Open in GEC Compass: $shareUrl";
                     SharePlus.instance.share(ShareParams(text: shareMsg));
                   } else {
